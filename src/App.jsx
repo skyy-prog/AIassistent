@@ -16,6 +16,8 @@ const popKeyframes = `@keyframes bubble-pop {
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }`;
 
+const PAGE_ZOOM = 0.8;
+
 export default function App() {
   const voiceCall = useVoiceCall();
   const messages = (voiceCall.transcript ?? []).filter((message) => getText(message).trim());
@@ -24,6 +26,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f7f9f6] font-mono text-[#20332a]">
       <style>{popKeyframes}</style>
+      <div style={{ zoom: PAGE_ZOOM }}>
 
       <header className="flex items-center justify-between px-5 py-5 sm:px-10">
         <p className="m-0 text-[.85rem] font-bold tracking-[.02em] text-[#1c5a3e]">Aura Skincare</p>
@@ -89,6 +92,7 @@ export default function App() {
           <SummaryCard transcript={voiceCall.transcript} summary={voiceCall.summary} />
         </div>
       </section>
+      </div>
     </div>
   );
 }
