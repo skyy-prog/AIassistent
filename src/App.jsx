@@ -2,28 +2,45 @@ import { CallControls } from "./components/CallControls.jsx";
 import { OrdersPanel } from "./components/OrdersPanel.jsx";
 import { StatusBadge } from "./components/StatusBadge.jsx";
 import { SummaryCard } from "./components/SummaryCard.jsx";
-import { Transcript } from "./components/Transcript.jsx";
 import { useVoiceCall } from "./hooks/useVoiceCall.js";
+
+const AGENT_ROLES = ["agent", "assistant", "aria", "ai", "bot", "model"];
+
+const getRole = (message) => String(message?.role ?? message?.speaker ?? message?.from ?? message?.sender ?? "").toLowerCase();
+
+const getText = (message) => (typeof message === "string" ? message : message?.text ?? message?.content ?? message?.message ?? message?.transcript ?? "");
+
+const popKeyframes = `@keyframes bubble-pop {
+  0% { opacity: 0; transform: translateY(16px) scale(.85); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}`;
 
 export default function App() {
   const voiceCall = useVoiceCall();
+  const messages = (voiceCall.transcript ?? []).filter((message) => getText(message).trim());
+  const hasChat = messages.length > 0;
 
   return (
     <div className="min-h-screen bg-[#f7f9f6] font-mono text-[#20332a]">
+      <style>{popKeyframes}</style>
+
       <header className="flex items-center justify-between px-5 py-5 sm:px-10">
         <p className="m-0 text-[.85rem] font-bold tracking-[.02em] text-[#1c5a3e]">Aura Skincare</p>
         <span className="text-[.72rem] text-[#718076]">Support console</span>
       </header>
 
-      <section className="flex min-h-[calc(100vh-72px)] w-full flex-col items-center justify-center px-5 pb-24 text-center sm:px-10">
-        <p className="mb-6 text-[.72rem] uppercase tracking-[.2em] text-[#6f8a7a]">Your AI care companion</p>
-        <h1 className="m-0 text-[clamp(3.2rem,11vw,9rem)] font-bold leading-[.95] tracking-[-.07em]">
+      <section
+        className={`flex w-full flex-col items-center justify-center px-5 pb-14 pt-4 text-center transition-[padding] duration-500 sm:px-10 ${hasChat ? "lg:pr-[460px]" : ""}`}
+      >
+        <p className="mb-4 text-[.72rem] uppercase tracking-[.2em] text-[#6f8a7a]">Your AI care companion</p>
+        <h1 className="m-0 text-[clamp(2.8rem,8vw,6.5rem)] font-bold leading-[.95] tracking-[-.07em]">
           Talk to <span className="text-[#246b4d]">Aria</span>
         </h1>
-        <p className="mb-8 mt-7 max-w-[460px] text-[.95rem] leading-relaxed text-[#68786e]">
+        <p className="mb-5 mt-5 max-w-[460px] text-[.95rem] leading-relaxed text-[#68786e]">
           Support for every Aura order. Tracking, returns and routines, by voice.
         </p>
-        <div className="mb-8">
+        <div className="mb-5">
           <StatusBadge state={voiceCall.state} />
         </div>
         <CallControls state={voiceCall.state} onStart={voiceCall.startCall} onEnd={voiceCall.endCall} />
@@ -34,19 +51,41 @@ export default function App() {
         )}
       </section>
 
-      <section className="mx-auto grid w-full max-w-[1800px] grid-cols-1 items-stretch gap-6 px-5 pb-20 sm:px-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <div className="min-w-0 lg:min-h-[720px] [&>*]:!m-0 lg:[&>*]:h-full">
+      {hasChat && (
+        <div
+          aria-live="polite"
+          className="pointer-events-none fixed bottom-6 right-5 top-[72px] z-20 flex w-[400px] max-w-[calc(100vw-2.5rem)] flex-col justify-end gap-3 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_14%)] sm:right-10"
+        >
+          {messages.map((message, index) => {
+            const isAgent = AGENT_ROLES.includes(getRole(message));
+            return (
+              <div
+                key={message?.id ?? index}
+                className={`flex flex-col gap-1 ${isAgent ? "items-start" : "items-end"}`}
+              >
+                <span className="px-1 text-[.64rem] uppercase tracking-[.14em] text-[#7b8d81]">{isAgent ? "Aria" : "Customer"}</span>
+                <p
+                  className={`m-0 max-w-[88%] animate-[bubble-pop_.4s_ease-out_both] px-4 py-3 text-[.84rem] leading-relaxed shadow-[0_8px_24px_#24352d18] ${
+                    isAgent
+                      ? "origin-bottom-left rounded-2xl rounded-bl-md bg-white text-[#27382e]"
+                      : "origin-bottom-right rounded-2xl rounded-br-md bg-[#246b4d] text-white"
+                  }`}
+                >
+                  {getText(message)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <section
+        className={`w-full px-5 pb-20 transition-[padding] duration-500 sm:px-10 ${hasChat ? "lg:pr-[460px]" : ""}`}
+      >
+        <div className="mx-auto w-full max-w-[1500px] [&>*]:!m-0">
           <OrdersPanel />
         </div>
-        <div className="relative min-h-[480px] min-w-0 rounded-xl border border-[#e1e9e0] bg-white">
-          <div className="flex h-full min-h-[480px] flex-col p-7 lg:absolute lg:inset-0 lg:min-h-0">
-            <h2 className="m-0 mb-5 border-b border-[#edf1eb] pb-5 text-[1.1rem] font-bold tracking-[-.01em] text-[#27382e]">Live transcript</h2>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <Transcript transcript={voiceCall.transcript} />
-            </div>
-          </div>
-        </div>
-        <div className="min-w-0 lg:col-span-2">
+        <div className="mx-auto mt-6 w-full max-w-[1500px]">
           <SummaryCard transcript={voiceCall.transcript} summary={voiceCall.summary} />
         </div>
       </section>
