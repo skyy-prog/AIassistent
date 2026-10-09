@@ -51,7 +51,7 @@ Deploy with the Vercel dashboard or:
 npx vercel
 ```
 
-The frontend is deployed as static assets and the Express API is exposed through `api/index.js`. `npm start` remains available for local production-style serving.
+The frontend is deployed as static assets and the API endpoints are exposed through `api/session.js`, `api/order.js`, and `api/summary.js`. `npm start` remains available for local production-style serving.
 
 ## Test scenarios
 
